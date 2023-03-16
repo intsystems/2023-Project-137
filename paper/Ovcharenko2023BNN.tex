@@ -13,25 +13,19 @@
 \usepackage{graphicx}
 \usepackage{natbib}
 \usepackage{doi}
+\usepackage{color}
+\usepackage{xcolor}
 
+\newcommand{\TODO}[1]{\textcolor{purple}{ToDo: #1.}}
 
+\title{Binary Neural Networks. Lossless picture quality for binary neural networks in pixel-level tasks.}
 
-\title{A template for the \emph{arxiv} style}
-
-\author{ David S.~Hippocampus\thanks{Use footnote for providing further
-		information about author (webpage, alternative
-		address)---\emph{not} for acknowledging funding agencies.} \\
-	Department of Computer Science\\
-	Cranberry-Lemon University\\
-	Pittsburgh, PA 15213 \\
-	\texttt{hippo@cs.cranberry-lemon.edu} \\
+\author{Kirill Ovcharenko \\
+	Moscow Institute of Physics and Technology\\
 	%% examples of more authors
 	\And
-	Elias D.~Striatum \\
-	Department of Electrical Engineering\\
-	Mount-Sheikh University\\
-	Santa Narimana, Levand \\
-	\texttt{stariate@ee.mount-sheikh.edu} \\
+	Zharikov Ilya \\
+	Moscow Institute of Physics and Technology\\
 	%% \AND
 	%% Coauthor \\
 	%% Affiliation \\
@@ -66,90 +60,66 @@ pdfkeywords={First keyword, Second keyword, More},
 \maketitle
 
 \begin{abstract}
-	\lipsum[1]
+Image Super Resolution (SR) is a crucial class of image processing techniques that enhance quality of visual data. 
+Deep Convolutional Neural Networks (DCNN) have recently shown great results in this field. However, application of DCNN on resource-limited devices remains challenging, as they demand significant amounts of memory, energy and computations. Binary neural networks (BNN) provide a promising approach to reduce computational complexity and speed up the inference of a model. To our best knowledge, there are not many papers devoted to applying BNN to SR tasks, as SR models are much more vulnerable to degradation in performance when decreasing the precision of weights, than image classification models. The paper proposes modification of a convolutional block to make it binary without performance decreasing.
+
 \end{abstract}
 
 
-\keywords{First keyword \and Second keyword \and More}
+\keywords{Binary Neural Network (BNN) \and Single Image Super Resolution (SISR) \and Binarization \and Model compression}
 
 \section{Introduction}
-\lipsum[2]
-\lipsum[3]
 
-\section{Headings: first level}
+\TODO{Need to be extended in terms related works further}
+
+Image Super Resolution (SR) aims to restore High Quality (HQ) image from corrupted Low Quality (LQ) counterpart. This task is important because of its various applications in medical imaging and surveillance instruments. In spite of the research in this field being active, it made some progress not a long ago, as some challenges were encountered. Main obstacle is desired output in SR tasks being much more diverse than input, so the model is required to do dense pixel-level prediction, hence is bound to be more complex.  
+
+Recent advances in the field of SR owe their success to Deep Neural Networks (DNN) which show state-of-the-art results in a wide range of computer vision problems, such as image classification, Semantic Segmentation etc. However, the models solving these tasks are usually complicated and demand a lot of space and computational resources, thus hindering their implementation on mobile devices, drones and other machines which are limited in GPU memory.
+
+Lately, different methods of reducing complexity of these models were proposed. While some papers focus on pruning and knowledge distillation, other researches introduce quantization as a way to decrease memory needed.
+
+The most extreme form of quantization is binarization. Binary Neural Networks (BNN) use only $1$ bit to represent each parameter, thus drastically decreasing space demanded to store the model. Moreover, with all parameters of the model set to $\{-1, 1\}$, most of the the calculations can be conducted using XNOR and Bitcount operations. This approach seems promising, as it proposes new ways to design hardware that can help to handle and exploit complex neural networks.
+
+However, it is obvious that BNN sacrifice precision and quality, as they have much less capacity and representational potential than Full-Precision (FP) networks. Previous works in this field propose different methods of maintaining competitive accuracy while achieving better performance. The paper~\cite{ma2019efficient} focuses on residual block binarization, which helps to reduce a significant part of the model's parameters. However, full-precision activations keep computational complexity of the model pretty high. The BBCU~\cite{xia2022basic} proposed effective Convolutional Unit that can be used in any architecture that relies on residual connections. It provides much more efficient training and inference, but oversimplifies weight binarization. IR-Net~\cite{qin2020forward} reduces infromation loss by balancing weights to achieve maximum information entropy in forward propagation, After that, IR2Net~\cite{xue2022ir2net} proposes two essential components of the learning process: Information Restriction and Information Recovery. However, paper investigates only the impact of these methods on performance of Image Classification models. 
+
+This paper adopts some techniques from the researches, mentioned above, and suggests further modifications of convolutional block that help to improve BNN's performance in SR tasks.
+
+Firstly, we adopt the idea of binarizing the activations with learnable threshold from \cite{xia2022basic}. That helps to achieve better performance while preserving competitive quality. We also try different sign's derivative's approximation to use in training stage.
+
+Secondly, we keep the idea of updating full-precision weights with respect to binarized weights from ~\cite{ma2019efficient}. 
+
+Finally, we advance the idea from ~\cite{xue2022ir2net} to restrict information from the input to increase learning productivity by implementing attention modules into our binary network.
+
+\section{Problem statement}
 \label{sec:headings}
 
-\lipsum[4] See Section \ref{sec:headings}.
+\TODO{Need to be slightly reformulated during theory week}
 
-\subsection{Headings: second level}
-\lipsum[5]
+Let $\{(X_i, Y_i)\}_{i=1}^n$ be our image dataset, where $X_i \in \mathbb{R}^{h_i \times w_i \times 3}$ denotes the low resolution image and $Y_i \in \mathbb{R}^{H_i \times W_i \times 3}$ - the high resolution one. Considering $M$ to be the model, SR task targets optimization of 
 \begin{equation}
-	\xi _{ij}(t)=P(x_{t}=i,x_{t+1}=j|y,v,w;\theta)= {\frac {\alpha _{i}(t)a^{w_t}_{ij}\beta _{j}(t+1)b^{v_{t+1}}_{j}(y_{t+1})}{\sum _{i=1}^{N} \sum _{j=1}^{N} \alpha _{i}(t)a^{w_t}_{ij}\beta _{j}(t+1)b^{v_{t+1}}_{j}(y_{t+1})}}
+    Q(M) = \frac{1}{n}\sum\limits_{i=1}^nf(M(X_i), Y_i)
+\end{equation}
+where $f$ represents either $PSNR$ or $SSIM$ metric, defined as:
+\begin{equation}
+    PSNR(x, y) = 10 \log_{10} \left(\frac{MAX_I^2}{MSE(x, y)}\right)
 \end{equation}
 
-\subsubsection{Headings: third level}
-\lipsum[6]
 
-\paragraph{Paragraph}
-\lipsum[7]
+Here $MAX_I$ is the maximum valid value for pixel, $MSE$ is mean squared error.
 
+\begin{equation}
+    SSIM(x, y) = \frac{(2\mu_x\mu_y + c_1)(2\sigma_{xy} + c_2)}{(\mu_x^2 + \mu_y^2 + c_1)(\sigma_{x}^2 + \sigma_{y}^2 + c_2)}
+\end{equation}
 
+$\mu_x$ denotes the mean for $x$, $\mu_y$ - the mean for $y$, $\sigma_x$ is the variance for $x$, $\sigma_y$ is the variance for $y$, $\sigma_{xy}$ is the covariation of $x$ and $y$, $c_1$ and $c_2$ - two constants depending on dynamic pixel range.
 
-\section{Examples of citations, figures, tables, references}
-\label{sec:others}
-
-\subsection{Citations}
-Citations use \verb+natbib+. The documentation may be found at
-\begin{center}
-	\url{http://mirrors.ctan.org/macros/latex/contrib/natbib/natnotes.pdf}
-\end{center}
-
-Here is an example usage of the two main commands (\verb+citet+ and \verb+citep+): Some people thought a thing \citep{kour2014real, hadash2018estimate} but other people thought something else \citep{kour2014fast}. Many people have speculated that if we knew exactly why \citet{kour2014fast} thought this\dots
-
-\subsection{Figures}
-\lipsum[10]
-See Figure \ref{fig:fig1}. Here is how you add footnotes. \footnote{Sample of the first footnote.}
-\lipsum[11]
-
-\begin{figure}
-	\centering
-	\includegraphics[width=0.5\textwidth]{../figures/log_reg_cs_exp.eps}
-	\caption{Sample figure caption.}
-	\label{fig:fig1}
-\end{figure}
-
-\subsection{Tables}
-See awesome Table~\ref{tab:table}.
-
-The documentation for \verb+booktabs+ (`Publication quality tables in LaTeX') is available from:
-\begin{center}
-	\url{https://www.ctan.org/pkg/booktabs}
-\end{center}
+Now let $B \in \mathcal{B}$ be our binarized representation of model $M$. $\mathcal{B}$ is space of BNN. Assuming $L$ to be number of layers in $B \in \mathcal{B}$, $W_l \in \{-1, 1\}^{C_{out} \times C_{in} \times K_h \times K_w}$, $l \in \{1 \ , ... \ , L\}$. Here $C_{out}$ is the number of output channels, $C_{in}$ is the number of input channels, $K_h$ is the kernel height, $K_w$ is the kernel weight. 
 
 
-\begin{table}
-	\caption{Sample table title}
-	\centering
-	\begin{tabular}{lll}
-		\toprule
-		\multicolumn{2}{c}{Part}                   \\
-		\cmidrule(r){1-2}
-		Name     & Description     & Size ($\mu$m) \\
-		\midrule
-		Dendrite & Input terminal  & $\sim$100     \\
-		Axon     & Output terminal & $\sim$10      \\
-		Soma     & Cell body       & up to $10^6$  \\
-		\bottomrule
-	\end{tabular}
-	\label{tab:table}
-\end{table}
-
-\subsection{Lists}
-\begin{itemize}
-	\item Lorem ipsum dolor sit amet
-	\item consectetur adipiscing elit.
-	\item Aliquam dignissim blandit est, in dictum tortor gravida eget. In ac rutrum magna.
-\end{itemize}
+Thus, the problem of binarization can be expressed in finding $B^{*}$ as
+\begin{equation}
+    B^{*} = \arg\min\limits_{B \in \mathcal{B}} \left[Q(M) - Q(B)\right]
+\end{equation}
 
 
 \bibliographystyle{unsrtnat}
