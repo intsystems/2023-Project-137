@@ -184,7 +184,7 @@ class BinaryBlock(nn.Module):
         super(BinaryBlock, self).__init__()
         m=[]
         for _ in range(2):
-            m.append(conv(n_feats,n_feats, kernel_size, bias=bias))
+            m.append(conv(n_feats,n_feats, kernel_size, bias=bias, resid_attn=resid_attn, bin_attn=bin_attn))
             if bn:
                 m.append(nn.BatchNorm2d(n_feats))
 
