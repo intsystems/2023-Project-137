@@ -5,10 +5,10 @@ import torch.nn.functional as F
 from misc.quant_convs_bbcu import BinaryBlock, BinaryConv2d, BinaryUpConv2d
 from basicsr.archs.arch_util import default_init_weights, make_layer
 from basicsr.utils.registry import ARCH_REGISTRY
-from misc.attention import PixelAttentionBlock
+from misc.attention import SpatialAttentionBlock, SqueezeExcitationAttentionBlock
 
 @ARCH_REGISTRY.register()
-class BinEDSRNonePixel(nn.Module):
+class BinEDSRSpatSE(nn.Module):
 
     def __init__(self, num_in_ch=3, num_out_ch=3, num_feat=64, num_block=16, upscale=4, img_range=1., rgb_mean=(0.4488, 0.4371, 0.4040)):
       super().__init__()
@@ -22,12 +22,14 @@ class BinEDSRNonePixel(nn.Module):
                   kernel_size=3,
                   bias=False,
                   bn=False,
-                  bin_attn=PixelAttentionBlock(num_feat))
+                  resid_attn=SpatialAttentionBlock(num_feat),
+                  bin_attn=SqueezeExcitationAttentionBlock(num_feat, 4))
 
       # upsampling
       self.upconv = BinaryUpConv2d(num_feat, num_feat * self.upscale * self.upscale, 3, False,upscale=upscale)
       
-      self.conv_after_body = BinaryConv2d(num_feat, num_feat, 3, bin_attn=PixelAttentionBlock(num_feat))
+      self.conv_after_body = BinaryConv2d(num_feat, num_feat, 3, resid_attn=SpatialAttentionBlock(num_feat),
+                  bin_attn=SqueezeExcitationAttentionBlock(num_feat, 4))
       self.conv_last = nn.Conv2d(num_feat, num_out_ch, 3, 1, 1)
 
       # activation function

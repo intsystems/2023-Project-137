@@ -1,7 +1,7 @@
 # EDSR
 
 # general settings
-name: train_BinEDSR_se_pixel
+name: train_BinEDSR_se_se
 model_type: SRModel
 scale: 2
 num_gpu: 0
@@ -50,7 +50,7 @@ datasets:
 
 # network structures
 network_g:
-  type: BinEDSRSEPixel
+  type: BinEDSRSESE
   num_in_ch: 3
   num_out_ch: 3
   num_feat: 64
