@@ -23,12 +23,12 @@ class BinEDSRSENone(nn.Module):
                   kernel_size=3,
                   bias=False,
                   bn=False,
-                  resid_attn=SqueezeExcitationAttentionBlock(num_feat, 32))
+                  resid_attn=SqueezeExcitationAttentionBlock(num_feat, 4))
 
       # upsampling
       self.upconv = BinaryUpConv2d(num_feat, num_feat * self.upscale * self.upscale, 3, False,upscale=upscale)
       
-      self.conv_after_body = BinaryConv2d(num_feat, num_feat, 3, resid_attn=SqueezeExcitationAttentionBlock(num_feat, 32))
+      self.conv_after_body = BinaryConv2d(num_feat, num_feat, 3, resid_attn=SqueezeExcitationAttentionBlock(num_feat, 4))
       self.conv_last = nn.Conv2d(num_feat, num_out_ch, 3, 1, 1)
 
       # activation function
