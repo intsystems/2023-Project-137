@@ -8,7 +8,7 @@ from basicsr.utils.registry import ARCH_REGISTRY
 from misc.attention import SpatialAttentionBlock
 
 @ARCH_REGISTRY.register()
-class BinEDSRSpatNone(nn.Module):
+class BinEDSRSpatSpat(nn.Module):
 
     def __init__(self, num_in_ch=3, num_out_ch=3, num_feat=64, num_block=16, upscale=4, img_range=1., rgb_mean=(0.4488, 0.4371, 0.4040)):
       super().__init__()
