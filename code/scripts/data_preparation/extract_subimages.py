@@ -1,9 +1,12 @@
+import sys
+from os import path as osp
+sys.path.append(osp.dirname(osp.dirname(osp.dirname(osp.abspath(__file__)))))
+
 import cv2
 import numpy as np
 import os
 import sys
 from multiprocessing import Pool
-from os import path as osp
 from tqdm import tqdm
 
 from basicsr.utils import scandir
