@@ -10,6 +10,7 @@
 \usepackage{amsmath}
 \usepackage{nicefrac}
 \usepackage{microtype}
+\usepackage{multirow}
 \usepackage{lipsum}
 \usepackage{subcaption}
 \usepackage{graphicx}
@@ -20,7 +21,12 @@
 
 \newcommand{\TODO}[1]{\textcolor{purple}{ToDo: #1.}}
 
-\title{Binary Neural Networks. Lossless picture quality for binary neural networks in pixel-level tasks.}
+\captionsetup[figure]{labelfont={bf},name={Fig.},labelsep=period}
+\captionsetup[table]{labelfont={bf},name={Table},labelsep=period}
+\addto\captionsrussian{\def\refname{References}}
+
+  
+\title{Efficient Image Super Resolution Using Attention In Binary Neural Networks}
 
 \author{Kirill Ovcharenko \\
 	Moscow Institute of Physics and Technology\\
@@ -74,7 +80,7 @@ Deep Convolutional Neural Networks [DCNN] have recently shown great results in t
 
 \TODO{Need to be extended in terms related works further}
 
-Image Super Resolution [SR] aims to restore High Quality [HQ] image from corrupted Low Quality [LQ] counterpart. This task is important because of its various applications in medical imaging and surveillance instruments. In spite of the research in this field being active, it made some progress not a long ago, as some challenges were encountered. Main obstacle is desired output in SR tasks being much more diverse than input, so the model is required to do dense pixel-level prediction, hence is bound to be more complex.  
+Image Super Resolution [SR]~\cite{wang2020deep} aims to restore High Quality [HQ] image from corrupted Low Quality [LQ] counterpart. This task is important because of its various applications in medical imaging~\cite{dharejo2022multimodal} and surveillance instruments~\cite{aakerberg2022real}. In spite of the research in this field being active, it made some progress not a long ago, as some challenges were encountered. Main obstacle is desired output in SR tasks being much more diverse than input, so the model is required to do dense pixel-level prediction, hence is bound to be more complex.  
 
 Recent advances in the field of SR owe their success to Deep Neural Networks [DNN] which show state-of-the-art results in a wide range of computer vision problems, such as image classification, Semantic Segmentation etc. However, the models solving these tasks are usually complicated and demand a lot of space and computational resources, thus hindering their implementation on mobile devices, drones and other machines which are limited in GPU memory.
 
@@ -82,12 +88,12 @@ Lately, different methods of reducing complexity of these models were proposed. 
 
 The most extreme form of quantization is binarization. Binary Neural Networks [BNN] use only $1$ bit to represent each parameter, thus drastically decreasing space demanded to store the model. Moreover, with all parameters of the model set to $\{-1, 1\}$, most of the the calculations can be conducted using XNOR and Bitcount operations. This approach seems promising, as it proposes new ways to design hardware that can help to handle and exploit complex neural networks.
 
-However, it is obvious that BNN sacrifice precision and quality, as they have much less capacity and representational potential than Full-Precision [FP] networks. Previous works in this field propose different methods of maintaining competitive accuracy while achieving better performance. The paper~\cite{ma2019efficient} focuses on residual block binarization, which helps to reduce a significant part of the model's parameters. However, full-precision activations keep computational complexity of the model pretty high. ReactNet~\cite{liu2020reactnet} suggests generalized binarization and activations functions that help to shift distribution, which significantly increases representational capacity of the binary model. The BBCU~\cite{xia2022basic} proposed effective Convolutional Unit that can be used in any architecture that relies on residual connections. It provides much more efficient training and inference, but oversimplifies weight binarization. IR-Net~\cite{qin2020forward} reduces information loss by balancing weights to achieve maximum information entropy in forward propagation. After that, IR2Net~\cite{xue2022ir2net} proposes two essential components of the learning process: Information Restriction and Information Recovery. BNext~\cite{guo2022join} also applies attention mechanism to obtain the key information from the full-precision activations and smooth out the loss landscape. 
-However, last two papers investigate only the impact of these methods on performance of Image Classification models. Another way of extracting necessary information was proposed in~\cite{hu2018squeeze}, where a squeeze-and-excitation block is added to every transformation to a feature map, so that it can learn dependencies between channels (which are expected to concentrate on different features). In contrast to regular approaches, the paper~\cite{zhao2020efficient} presented a new method of attention that helps model to better get pixel-level dependencies and exhibits great results in SR task.
+However, it is obvious that BNN sacrifice precision and quality, as they have much less capacity and representational potential than Full-Precision [FP] networks. Previous works in this field propose different methods of maintaining competitive accuracy while achieving better performance. The paper~\cite{ma2019efficient} focuses on residual block binarization, which helps to reduce a significant part of the model's parameters. However, full-precision activations keep computational complexity of the model pretty high. ReactNet~\cite{liu2020reactnet} suggests generalized binarization and activations functions that help to shift distribution, which significantly increases representational capacity of the binary model. The BBCU~\cite{xia2022basic} proposed effective Convolutional Unit that can be used in any architecture that relies on residual connections. It provides much more efficient training and inference, but oversimplifies weight binarization. Moreover, the block modification implies disposal of the batch normalization block. However, recent studies~\cite{wei2023ebsr} show that models without the BatchNorm module (e.g. EDSR~\cite{lim2017enhanced}) suffer a performance drop during binarization as they have diverse distributions between channels and layers. 
+IR-Net~\cite{qin2020forward} reduces information loss by balancing weights to achieve maximum information entropy in forward propagation. After that, IR2Net~\cite{xue2022ir2net} proposes two essential components of the learning process: Information Restriction and Information Recovery. BNext~\cite{guo2022join} also applies attention mechanism to obtain the key information from the full-precision activations and smooth out the loss landscape. 
+However, last two papers investigate only the impact of these methods on performance of Image Classification models. Another way of extracting necessary information was proposed in~\cite{hu2018squeeze}, where a squeeze-and-excitation block is added to every transformation to a feature map, so that it can learn dependencies between channels (which are expected to concentrate on different features). 
+In contrast to regular approaches, the paper~\cite{zhao2020efficient} presented a new method of attention that helps model to better get pixel-level dependencies and exhibits great results in SR task. 
 
-This paper adopts some techniques from the researches, mentioned above, and suggests further modifications of convolutional block that help to improve BNN's performance in SR tasks.
-
-We use EDSR~\cite{lim2017enhanced} as a backbone for our modified binary block, as it doesn't require batch normalization module and shows state-of-the-art results. We use BBCU~\cite{xia2022basic} as a baseline for our modification as it showed prominent performance in multiple Image Restoration tasks, particularly in SR. This paper proposes several adjustments for the binary convolutional block.
+This paper adopts some techniques from the researches, mentioned above, and suggests further modifications of convolutional block that help to improve BNN's performance in SR tasks. We use BBCU~\cite{xia2022basic} as a baseline for our modification as it showed prominent performance in multiple Image Restoration tasks, particularly in SR. This paper proposes several adjustments for the binary convolutional block.
 
 Firstly, we adopt the idea of using generalized activation and sign functions from \cite{liu2020reactnet}. That helps to achieve better performance while preserving reasonable computational demands. 
 
@@ -100,7 +106,7 @@ Finally, we advance the idea from ~\cite{xue2022ir2net} and ~\cite{guo2022join} 
 
 \TODO{Need to be slightly reformulated during theory week}
 
-Let $\{(X_i, Y_i)\}_{i=1}^n$ be our image dataset, where $X_i \in \mathbb{R}^{h_i \times w_i \times 3}$ denotes the low resolution image and $Y_i \in \mathbb{R}^{H_i \times W_i \times 3}$ - the high resolution one. Considering $M$ to be the model, SR task targets optimization of 
+Let $\{(X_i, Y_i)\}_{i=1}^n$ be our image dataset, where $X_i \in \mathbb{R}^{h_i \times w_i \times 3}$ denotes the low resolution image and $Y_i \in \mathbb{R}^{H_i \times W_i \times 3}$ is the high resolution one. Considering $M$ to be the model, SR task targets optimization of 
 \begin{equation}
     Q(M) = \frac{1}{n}\sum\limits_{i=1}^nf(M(X_i), Y_i)
 \end{equation}
@@ -131,7 +137,7 @@ Thus, the problem of binarization can be expressed in finding $B^{*}$ as
 
 In this section we define basic binarization operations that are used to build the Binary Convolutional Block.
 
-Let $X_t^f \in \mathbb{R}^{H \times W \times C_{in}}$ and $W_t^f \in \mathbb{R}^{K_{h} \times K_{w} \times C_{in} \times C_{out}}$ be full-precision activations and full-precision convolution weights on the $t$-th layer respectively. Here $H$ and $W$ denote the input feature map height and width, $C_{in}$ stands for the number of input channels and $C_{out}$ is the number of output channels. Then $X_t^b \in \{-1, 1\}^{H \times W \times C_{in}}$, $W_t^b \in \{-1, 1\}^{\times K_{w} \times C_{in} \times C_{out}}$ would be the binary approximations for the corresponding full-precision parameters.
+Let $X_t^f \in \mathbb{R}^{H \times W \times C_{in}}$ and $W_t^f \in \mathbb{R}^{K_{h} \times K_{w} \times C_{in} \times C_{out}}$ be full-precision activations and full-precision convolution weights on the $t$-th layer respectively. Here $H$ and $W$ denote the input feature map height and width, $C_{in}$ stands for the number of input channels and $C_{out}$ is the number of output channels. Then $X_t^b \in \{-1, 1\}^{H \times W \times C_{in}}$, $W_t^b \in \{-1, 1\}^{K_{h} \times K_{w} \times C_{in} \times C_{out}}$ would be the binary approximations for the corresponding full-precision parameters.
 
 When using binary parameters, convolution operation $X^b \ast W^b$ can be effectively performed using XNOR and Bitcount operations:
 
@@ -151,9 +157,23 @@ We adopt the idea of using generalized sign function from ~\cite{liu2020reactnet
 \label{eq_act_sign}
 \end{equation}
 
-Here $x_{i, j, k}^f \in X_t^f$, $x_{i, j, k}^b \in X_t^b$ are single full-precision and binary activations respectively.
+Here $x_{i, j, k}^f \in X_t^f$, $x_{i, j, k}^b \in X_t^b$ are single full-precision and binary activations respectively. $\alpha_k$ denotes the learnable threshold that helps to move the zero point of the distribution.
 
-When binarizing the convolution weights we use the regular Sign function:
+
+Obviously, the derivative of the RSign function cannot be utilized in the training process, as it is impossible to propagate gradients through it. We use an approximation of the RSign derivative, which is defined as follows:
+
+\begin{equation}
+    Approx\left(\dfrac{\partial RSign(x_{i, j, k})}{\partial x_{i, j, k}}\right) = 
+    \begin{cases}
+        2 + 2(x_{i, j, k} -  \alpha_k), & \alpha_k - 1 \le x_{i, j, k}^f < \alpha_k \\
+        2 - 2(x_{i, j, k} -  \alpha_k), & \alpha_k \le x_{i, j, k}^f < \alpha_k + 1 \\
+        0, & otherwise
+    \end{cases}, \quad
+    i \in [0, H), j \in [0, W), k \in [0, C_{in})
+\label{eq_act_sign}
+\end{equation}
+
+When binarizing the convolution weights we use the scaled Sign function:
 
 \begin{equation}
     w_{i, j, k, l}^b = Sign(w_{i, j, k, l}^f) = 
@@ -164,9 +184,16 @@ When binarizing the convolution weights we use the regular Sign function:
     i \in [0, H), j \in [0, W), k \in [0, C_{in}), l \in [0, C_{out})
 \end{equation}
 
-Here full-precision and binary weights are denoted as $w_{i, j, k, l}^f \in W_t^f$, $w_{i, j, k, l}^b \in W_t^b$.
+Here full-precision and binary weights are denoted as $w_{i, j, k, l}^f \in W_t^f$, $w_{i, j, k, l}^b \in W_t^b$ and $\alpha_l \in \mathbb{R}$ represents the scale factor.
 
-We preserve the idea from ~\cite{ma2019efficient} of using learnable $\alpha_l$ parameter instead of the optimal value $\alpha_l = \dfrac{|W_l|}{n}$, as optimality in the optimisation task is not necessary consistent with the optimality of target loss function.
+Optimization task of finding the optimal scale factor for binary weights can be expressed as follows:
+\begin{equation}
+    \alpha_l^* = \arg\min\limits_{\alpha} ||W_{t, l}^f - \alpha W_{t, l}^b||
+\end{equation}
+
+Where $W_{t, l}^f \in \mathbb{R}^{K_{h} \times K_{w} \times C_{in}}$, $W_{t, l}^b \in \{-1, 1\}^{K_{h} \times K_{w} \times C_{in}}$. 
+
+We preserve the idea from ~\cite{ma2019efficient} of using learnable $\alpha_l$ parameter instead of the optimal value $\alpha_l = \alpha^* = \dfrac{|W_{t, l}^f|}{n}$, as optimality in the aforementioned optimisation task is not necessary consistent with the optimality of target loss function.
 
 We use RPReLU~\cite{liu2020reactnet} as activation function, because it achieves better performance by shifting the negative component of input's distribution, which is important for BNNs.
 
@@ -181,7 +208,7 @@ RPReLU is defined as follows:
     i \in [0, H), j \in [0, W), k \in [0, C_{in})
 \end{equation}
 
-Where $x_{i, j, k} \in \mathbb{R}^{H \times W \times C_{in}}$ is an element of the input feature map, $\gamma_i \in \mathbb{R}$ and $\zeta_i \in \mathbb{R}$ are learnable shifts for moving the distribution, and $\beta_i \in \mathbb{R}$ is a learnable coefficient controlling the slope of the negative part.
+Where $x_{i, j, k} \in \mathbb{R}^{H \times W \times C_{in}}$ is an element of the input feature map, $\gamma_k \in \mathbb{R}$ and $\zeta_k \in \mathbb{R}$ are learnable shifts for moving the distribution, and $\beta_k \in \mathbb{R}$ is a learnable coefficient controlling the slope of the negative part.
 
 Previous researches displayed the importance of the residual connection in the Binary Convolution Block, especially in the SR task, so we keep it for every binary convolution to transfer the full-precision information through the block. Moreover, BBCU~\cite{xia2022basic} shows that activation function narrows the negative part of the residual connection, thus losing negative full-precision information. On that account, we keep the idea of moving the residual connection out of the activation function.
 
@@ -195,24 +222,7 @@ Taking in consideration all the points mentioned above, the baseline block can b
 
 Here $X_{t}^b$ was also acquired from the amplified activations $kX_t^f$, but the learnable threshold from \ref{eq_act_sign} helps to filter the amplitude. 
 
-\subsection{Attention modules}
-When the full-precision model is being binarized, it is bound to lose some representational capacity and suffer a performance decrease. Previous researches~\cite{guo2022join, xue2022ir2net} focus on applying attention mechanism to help the model to capture the most important features and dependencies. Further advancing the idea of restricting information, we suggest attention modules that help the model to extract necessary features from the input. 
-
-We propose several different attention blocks: a simple squeeze-and-excitation attention, a spatial attention and a pixel attention.
-
-A squeeze-and-excitation block~\cite{hu2018squeeze} is depicted on \ref{blocks:a}. It consists of Global Average Pooling (GAP), two linear layers with a non-linear activation function (ReLU) and a sigmoid function, which is defined as follows:
-
-\begin{equation*}
-    \sigma(x) = \dfrac{1}{1 + e^{-x}}
-\end{equation*}
-
-The structure of the block helps model to learn non-linear dependencies between channels, hence between different features.
-
-Spatial attention block (\ref{blocks:b}) consists of one $1\times1$ convolution with $1$ output channel followed by a sigmoid function. It focuses on getting a 2D attention map which helps it to learn relationships between channels for every pixel on the feature map.
-
-Finally, pixel attention block (\ref{blocks:c}) has similar structure to the spatial attention block, except for using a $1 \times 1$ convolution with the same number of the output channels. It constructs a 3D attention map that learn connections between both the channels and the pixels. Previous works~\cite{zhao2020efficient} proved it to be the best option for SR tasks as it helps to learn complex pixel-level dependencies.
-
-\begin{figure}[h]
+\begin{figure}[t]
 \centering
   \begin{subfigure}[c]{0.33\textwidth}
     \includegraphics[width=\linewidth]{se_attn.png}
@@ -232,34 +242,106 @@ Finally, pixel attention block (\ref{blocks:c}) has similar structure to the spa
 \caption{Attention blocks} \label{blocks}
 \end{figure}
 
+\subsection{Attention modules}
+When the full-precision model is being binarized, it is bound to lose some representational capacity and suffer a performance decrease. Previous researches~\cite{guo2022join, xue2022ir2net} focus on applying attention mechanism to help the model to capture the most important features and dependencies. Further advancing the idea of restricting information, we suggest attention modules that help the model to extract necessary features from the input. 
 
-\begin{figure}[h]
-\label{block}
-\centering
-\includegraphics[width=0.8\textwidth]{block.png}
-\caption{Basic binary block modification} \label{block}
-\end{figure}
+We propose several different attention blocks: a simple squeeze-and-excitation attention, a spatial attention and a pixel attention.
+
+A squeeze-and-excitation block~\cite{hu2018squeeze} is depicted on \ref{blocks:a}. It consists of Global Average Pooling (GAP), two linear layers with a non-linear activation function (ReLU) and a sigmoid function, which is defined as follows:
+
+\begin{equation*}
+    \sigma(x) = \dfrac{1}{1 + e^{-x}}
+\end{equation*}
+
+The structure of the block helps model to learn non-linear dependencies between channels, hence between different features.
+
+Spatial attention block (\ref{blocks:b}) consists of one $1\times1$ convolution with $1$ output channel followed by a sigmoid function. It focuses on getting a 2D attention map which helps it to learn relationships between channels for every pixel on the feature map.
+
+Finally, pixel attention block (\ref{blocks:c}) has similar structure to the spatial attention block, except for using a $1 \times 1$ convolution with the same number of the output channels. It constructs a 3D attention map that learn connections between both the channels and the pixels. Previous works~\cite{zhao2020efficient} proved it to be the best option for SR tasks as it helps to learn complex pixel-level dependencies.
 
 \subsection{Proposed modification}
 In the baseline block, outputs of the binary convolution and activations from the previous layer are added to each other and have the same influence on the result. However, full-precision residual connections have information that cannot be effectively processed by the binary convolution due to its simple structure. Therefore, we need to provide a method to get the most important features from previous layer. Hence, we add an attention module to the residual branch of the convolutional block. 
+
+\begin{figure}[t]
+\centering
+\begin{subfigure}[b]{0.8\textwidth}
+   \includegraphics[width=1\linewidth]{baseline.png}
+   \caption{Baseline BBCU-block}
+   \label{bbcu:a} 
+\end{subfigure}
+
+\begin{subfigure}[b]{0.8\textwidth}
+   \includegraphics[width=1\linewidth]{block.png}
+   \caption{BBCU-block modification (ours)}
+   \label{bbcu:b}
+\end{subfigure}
+\end{figure}
 
 However, the outputs of the convolution branch can also contain unnecessary information that should not be propagated to the next layer. Thus, we add another attention block that is applied to the RPReLU output before connecting with residual information.
 
 To give the model more freedom when deciding on the importance of information, we add scaling factors $a_1$ and $a_2$ to the binary convolution and residual branches respectively. Having these coefficients as learnable parameters help the model to propagate the most essential features to the next layers. Moreover, tuning these coefficients alleviates the need of using amplification factor, as $a_1$ and $a_2$ can maintain necessary amplitude of distribution of the residual information.
 
-The block with all the mentioned modifications is presented on \ref{block}. Independently constructed attention maps are applied to both residual and binary branches and the outputs are connected using learnable scaling coefficients. 
+The block with all the mentioned modifications is presented on \ref{bbcu:b}. Independently constructed attention maps are applied to both residual and binary branches and the outputs are connected using learnable scaling coefficients. 
 
 Having similar structure with BBCU, the block can be used in any SR model architecture with minimal effort. In the next section we implement the modified block into EDSR and prove it to show state-of-the-art results on the benchmark datasets.
 
 \section{Computational experiment}
-\subsection{Preliminary report}
-\begin{figure}[h]
+\subsection{Experiment setup}
+
+We use EDSR~\cite{lim2017enhanced} as a backbone for our modified binary block, as it doesn't require batch normalization module and shows state-of-the-art results. Each convolution of the body is replaced with a modified binary block. Moreover, we preserve the idea of binarizing the upsampling convolution from~\cite{xia2022basic}. 
+
+We train our models on DIV2K~\cite{agustsson2017ntire} dataset, which contains 800 images. We evaluate models on 4 benchmark datasets: Set5~\cite{bevilacqua2012low}, Set14~\cite{zeyde2012single}, B100~\cite{martin2001database} and Urban100~\cite{huang2015single}. 
+
+\begin{figure}[t]
 \caption{Validation metric plots for baseline (BBCU)}
 \centering
 \includegraphics[width=0.8\textwidth]{val_metrics.png}
+\label{baseline}
 \end{figure}
-We expect our modification to show the same trend of PSNR and SSIM metrics, but the goal of the research is to increase the performance while preserving the amount of computational resources required.
 
+Batches contain 16 image patches of size 128×128. The initial learning rate is set to $1\times 10^{-4}$. The models are trained for 300000 iterations, and learning rate halving is performed every 200000 iterations.
+
+
+\subsection{Basic experiment}
+Results of the baseline block training are presented on~\ref{baseline}. We expect our modification to show the same trend of PSNR and SSIM metrics, but the goal of the research is to increase the performance while preserving the amount of computational resources required.
+
+\begin{figure}[t]
+\caption{Validation metric plots for two modifications}
+\centering
+\includegraphics[width=0.8\textwidth]{exp_first_iter.png}
+\label{first_iter}
+\end{figure}
+
+\subsection{Experiment results}
+Figure~\ref{first_iter} depicts plots of validation metrics for several proposed modifications. Quantitative results are presented in the table~\ref{tab:metric_tab}. 
+
+\begin{table}[]
+    \centering
+    \begin{tabular}{ |c|c|c|c|c|c|c|c|c|c| } 
+     \hline
+      \multirow{2}{*}{Modification} & \multirow{2}{*}{GFLOPs} & \multicolumn{2}{c}{Set5} & \multicolumn{2}{c}{Set14} & \multicolumn{2}{c}{B100} & \multicolumn{2}{c}{Urban100}\\ 
+      & & PSNR & SSIM & PSNR & SSIM & PSNR & SSIM & PSNR & SSIM\\ 
+      Vanilla EDSR & $45.1$ & 37.10 &  0.96 & 32.76 & 0.91 & 31.57 & 0.89 & 30.16 & 0.91 \\ 
+      BinEDSR & $6.0$ & 33.89 & 0.93 & 30.58 & 0.88 & 29.87 & 0.86 & 27.14 & 0.85 \\ 
+      Bin SE & $8.1$ & 33.96 & 0.93 & 30.63 & 0.88 & 29.91 & 0.86 & 27.20 & 0.85 \\ 
+      Bin Spat & $8.1$ & 33.80 & 0.93 & 30.54 & 0.88 & 29.83 & 0.86 & 27.10 & 0.85 \\ 
+      Res SE & $8.1$ & 33.90 & 0.93 & 30.59 & 0.88 & 29.88 & 0.86 & 27.17 & 0.85 \\ 
+      Res Spat & $8.1$ & 33.94 & 0.93 & 30.62 & 0.88 & 29.91 & 0.86 & 27.19 & 0.85 \\ 
+      Res SE + Bin SE & $10.4$ & 33.96 & 0.94 & 30.61 & 0.88 & 29.89 & 0.86 & 27.16 & 0.85 \\ 
+      Res SE + Bin Spat & $10.4$ & 33.92 & 0.93 & 30.58 & 0.88 & 29.89 & 0.86 & 27.15 & 0.85 \\ 
+      Res Spat + Bin SE & $10.4$ & 34.02 & 0.94 & 30.63 & 0.88 & 29.93 & 0.86 & 27.20 & 0.85 \\ 
+      Res Spat + Bin Spat & $10.4$ & 33.88 & 0.93 & 30.54 & 0.88 & 29.82 & 0.86 & 27.10 & 0.85 \\ 
+     \hline
+    \end{tabular}
+    \caption{Quantitative comparison of PSNR and SSIM on benchmark datasets}
+    \label{tab:metric_tab}
+\end{table}
+
+\clearpage
+\section{Conclusion}
+This paper proposes several binary block modifications that improve the performance of Binary Neural Networks in Super Resolution task. We consider attention module being an essential component of the BNN, as it helps to restrict the unnecessary information and provides the network with more effective training process. Quantitative results prove this hypothesis and show that binary neural networks really suffer from abundance of the input information and perform better when being restricted. 
+
+Future researches can be aimed at implementing different attention blocks into the BNN and further experiments on restricting information and learning channel-wise and pixel-wise distribution variations.
 
 \bibliographystyle{unsrtnat}
 \bibliography{references}
